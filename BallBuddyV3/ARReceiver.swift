@@ -19,12 +19,7 @@ protocol ARDataReceiver: AnyObject {
 // Store depth-related AR data.
 final class ARData {
     var depthImage: CVPixelBuffer?
-    var depthSmoothImage: CVPixelBuffer?
-    var colorImage: CVPixelBuffer?
     var confidenceImage: CVPixelBuffer?
-    var confidenceSmoothImage: CVPixelBuffer?
-    var cameraIntrinsics = simd_float3x3()
-    var cameraResolution = CGSize()
 }
 
 // Configure and run an AR session to provide the app with depth-related AR data.
@@ -42,10 +37,10 @@ final class ARReceiver: NSObject, ARSessionDelegate {
     
     // Configure the ARKit session.
     func start() {
-        guard ARWorldTrackingConfiguration.supportsFrameSemantics([.sceneDepth, .smoothedSceneDepth]) else { return }
+        guard ARWorldTrackingConfiguration.supportsFrameSemantics(.sceneDepth) else { return }
         // Enable both the `sceneDepth` and `smoothedSceneDepth` frame semantics.
         let config = ARWorldTrackingConfiguration()
-        config.frameSemantics = [.sceneDepth, .smoothedSceneDepth]
+        config.frameSemantics = .sceneDepth
         arSession.run(config)
     }
     
@@ -55,15 +50,11 @@ final class ARReceiver: NSObject, ARSessionDelegate {
   
     // Send required data from `ARFrame` to the delegate class via the `onNewARData` callback.
     func session(_ session: ARSession, didUpdate frame: ARFrame) {
-        if(frame.sceneDepth != nil) && (frame.smoothedSceneDepth != nil) {
+        if(frame.sceneDepth != nil) {
             arData.depthImage = frame.sceneDepth?.depthMap
-            arData.depthSmoothImage = frame.smoothedSceneDepth?.depthMap
             arData.confidenceImage = frame.sceneDepth?.confidenceMap
-            arData.confidenceSmoothImage = frame.smoothedSceneDepth?.confidenceMap
-            arData.colorImage = frame.capturedImage
-            arData.cameraIntrinsics = frame.camera.intrinsics
-            arData.cameraResolution = frame.camera.imageResolution
             delegate?.onNewARData(arData: arData)
+            print("Here")
         }
     }
 }
